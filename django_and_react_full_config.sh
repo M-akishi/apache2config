@@ -74,7 +74,7 @@ EOL
         exit 1
     }
 
-    systemctl reload apache2 || {
+    systemctl restart apache2 || {
         echo "Error al reiniciar Apache."
         exit 1
     }
@@ -94,12 +94,15 @@ django_add() {
     mkdir -p "$project_dir"
     echo "Carpeta $project_dir creada."
 
-    chown "$USER":"$USER" "$project_dir"
-    chmod 755 "$project_dir"
-
+    chown -R "$USER":"$USER" "$project_dir"
+    chmod -R 777 "$project_dir"
+    
     cd "$project_dir" || exit
     python3 -m venv venv
     echo "Entorno virtual creado en $project_dir/venv."
+
+    chown -R "$USER":"$USER" "$project_dir"
+    chmod -R 777 "$project_dir"
 
     source venv/bin/activate
     pip install --upgrade pip
@@ -122,12 +125,10 @@ django_add() {
     sed -i "s/DEBUG = True/DEBUG = False/g" "$settings_file"
     sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \['*'\]/g" "$settings_file"
     echo "STATIC_ROOT = os.path.join(BASE_DIR, 'static/')" >> "$settings_file"
+    sed -i '1i\import os' "$settings_file"
 
     echo "settings.py actualizado con ALLOWED_HOSTS y STATIC_ROOT."
 
-    # Cambiar permisos
-    chown -R www-data:www-data "$project_dir"
-    chmod -R 755 "$project_dir"
 
     # Ejecutar collectstatic
     python manage.py collectstatic --noinput || {
@@ -145,6 +146,10 @@ django_add() {
         echo "Error al aplicar las migraciones."
         exit 1
     }
+
+    chown -R "$USER":"$USER" "$project_dir"
+    chmod -R 777 "$project_dir"
+
     echo "Migraciones creadas y aplicadas exitosamente."
 
     echo "Proyecto Django configurado correctamente en $project_dir."
@@ -164,7 +169,7 @@ react_add() {
     echo "Carpeta $react_project_dir creada."
 
     chown "$USER":"$USER" "$react_project_dir"
-    chmod 755 "$react_project_dir"
+    chmod 777 "$react_project_dir"
 
     cd "$react_project_dir" || exit
     npx create-react-app . || {
@@ -177,10 +182,11 @@ react_add() {
         echo "Error al compilar la aplicación React."
         exit 1
     }
-    echo "Aplicación React compilada en modo producción."
 
-    chown -R www-data:www-data "$react_project_dir"
-    chmod -R 755 "$react_project_dir"
+    chown "$USER":"$USER" "$react_project_dir"
+    chmod 777 "$react_project_dir"
+
+    echo "Aplicación React compilada en modo producción."
 }
 
 # Pregunta al usuario si desea configurar el servidor

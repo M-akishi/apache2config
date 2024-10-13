@@ -115,11 +115,40 @@ django_add() {
     }
     echo "Proyecto Django $project_name creado en $project_dir."
 
+    # Configurar settings.py
+    settings_file="$project_dir/$project_name/settings.py"
+    
+    # Configuración de ALLOWED_HOSTS y STATIC_ROOT
+    sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \['*'\]/g" "$settings_file"
+    echo "STATIC_ROOT = os.path.join(BASE_DIR, 'static/')" >> "$settings_file"
+
+    echo "settings.py actualizado con ALLOWED_HOSTS y STATIC_ROOT."
+
+    # Cambiar permisos
     chown -R www-data:www-data "$project_dir"
     chmod -R 755 "$project_dir"
 
+    # Ejecutar collectstatic
+    python manage.py collectstatic --noinput || {
+        echo "Error al ejecutar collectstatic."
+        exit 1
+    }
+    echo "Archivos estáticos recogidos exitosamente."
+
+    # Crear y aplicar migraciones
+    python manage.py makemigrations || {
+        echo "Error al crear las migraciones."
+        exit 1
+    }
+    python manage.py migrate || {
+        echo "Error al aplicar las migraciones."
+        exit 1
+    }
+    echo "Migraciones creadas y aplicadas exitosamente."
+
     echo "Proyecto Django configurado correctamente en $project_dir."
 }
+
 
 react_add() {
     local react_project_name=$1
@@ -162,14 +191,7 @@ if [[ "$confirmation" != "s" && "$confirmation" != "si" ]]; then
     exit 0
 fi
 
-# Verificar si Apache está instalado
-if systemctl list-units --type=service --all | grep -q 'apache2'; then
-    echo "El servidor Apache ya está listo, configurando carpetas..."
-else
-    echo "El servidor Apache no está instalado, configurando..."
-    apache2_first_setup
-    echo "El servidor Apache ya está listo, configurando carpetas..."
-fi
+apache2_first_setup
 
 # Solicitar nombres de proyectos
 read -p "Nombre del proyecto Django: " djangoproject

@@ -66,9 +66,14 @@ apache2_sites_config() {
 </VirtualHost>
 EOL
 
-    echo "Listen 81" |  tee -a /etc/apache2/ports.conf > /dev/null
+    # Verificar si ya existe Listen 81 en ports.conf
+    if ! grep -q "^Listen 81" /etc/apache2/ports.conf; then
+    echo "Listen 81" | tee -a /etc/apache2/ports.conf > /dev/null
     echo "Configuración de puerto 81 agregada a ports.conf."
-
+    else
+    echo "El puerto 81 ya está configurado en ports.conf."
+    fi
+    
     a2ensite "${django_project_name}_and_${react_project_name}" || {
         echo "Error al habilitar el sitio ${django_project_name}_and_${react_project_name}."
         exit 1

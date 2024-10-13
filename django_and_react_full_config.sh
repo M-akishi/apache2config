@@ -173,10 +173,10 @@ fi
 
 # Solicitar nombres de proyectos
 read -p "Nombre del proyecto Django: " djangoproject
-django_add "$djangoproject"
+djangoproject=$(echo "$djangoproject" | sed 's/ //g')
 
 read -p "Nombre del proyecto React: " reactproject
-react_add "$reactproject"
+reactproject=$(echo "$reactproject" | sed 's/ //g')
 
 # Configurar Apache
 apache2_sites_config "$djangoproject" "$reactproject"

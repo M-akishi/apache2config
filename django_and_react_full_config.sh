@@ -118,7 +118,8 @@ django_add() {
     # Configurar settings.py
     settings_file="$project_dir/$project_name/settings.py"
     
-    # Configuración de ALLOWED_HOSTS y STATIC_ROOT
+    # Configuración de ALLOWED_HOSTS, STATIC_ROOT y debug
+    sed -i "s/DEBUG = True/DEBUG = False/g" "$settings_file"
     sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \['*'\]/g" "$settings_file"
     echo "STATIC_ROOT = os.path.join(BASE_DIR, 'static/')" >> "$settings_file"
 
